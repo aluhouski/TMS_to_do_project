@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои задачи{% endblock %}
+
+{% block content %}
+<h2>Мои задачи</h2>
+
+<a href="{% url 'task_stats' %}" class="btn btn-info mb-3">📊 Статистика</a>
+<a href="{% url 'task_create' %}" class="btn btn-primary mb-3 ms-2">➕ Добавить задачу</a>
+
+<form method="get" class="mb-4">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <label for="category" class="form-label">Категория:</label>
+            <select name="category" id="category" class="form-select">
+                <option value="">Все</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="priority" class="form-label">Приоритет:</label>
+            <select name="priority" id="priority" class="form-select">
+                <option value="">Все</option>
+                <option value="high" {% if selected_priority == 'high' %}selected{% endif %}>Высокий</option>
+                <option value="medium" {% if selected_priority == 'medium' %}selected{% endif %}>Средний</option>
+                <option value="low" {% if selected_priority == 'low' %}selected{% endif %}>Низкий</option>
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button type="submit" class="btn btn-outline-primary w-100">🔍 Фильтровать</button>
+        </div>
+    </div>
+</form>
+
+<ul class="list-group">
+    {% for task in tasks %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></strong>
+                {% if task.due_date %} — до {{ task.due_date|date:'d.m.Y H:i' }}{% endif %}
+                {% if task.is_completed %} ✅{% endif %}
+            </div>
+            <div>
+                <a href="{% url 'task_update' task.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
+                <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+            </div>
+        </li>
+    {% empty %}
+        <li class="list-group-item text-muted">У тебя пока нет задач</li>
+    {% endfor %}
+</ul>
+{% endblock %}

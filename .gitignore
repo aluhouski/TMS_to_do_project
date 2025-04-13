@@ -132,6 +132,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+todoenv/
 ENV/
 env.bak/
 venv.bak/
@@ -172,3 +173,14 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# PostgreSQL dumps
+*.sql
+*.dump
+
+# Redis (если вдруг попадёт в проект)
+dump.rdb
+
+# Django collected static/media (если когда-то будешь использовать collectstatic)
+staticfiles/
+media/

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Статистика по задачам{% endblock %}
+
+{% block content %}
+<h2>Статистика по задачам</h2>
+<ul class="list-group mb-4">
+  <li class="list-group-item">Всего задач: {{ total_tasks }}</li>
+  <li class="list-group-item">Выполнено: {{ completed_tasks }}</li>
+  <li class="list-group-item">Просрочено: {{ overdue_tasks }}</li>
+  <li class="list-group-item">Выполнено за 7 дней: {{ recent_completed }}</li>
+</ul>
+<a href="{% url 'task_list' %}" class="btn btn-secondary">Назад к задачам</a>
+{% endblock %}
