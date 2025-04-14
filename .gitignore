@@ -123,6 +123,7 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
+celerybeat-schedule.db
 
 # SageMath parsed files
 *.sage.py
@@ -183,4 +184,5 @@ dump.rdb
 
 # Django collected static/media (если когда-то будешь использовать collectstatic)
 staticfiles/
-media/
+media/celerybeat-schedule*
+

@@ -4,13 +4,24 @@
 
 {% block content %}
 <h2>Категории</h2>
+
 <ul class="list-group mb-3">
   {% for category in categories %}
-    <li class="list-group-item">{{ category.name }} — {{ category.color }}</li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      <span>{{ category.name }} — {{ category.color }}</span>
+      <span>
+        <a href="{% url 'category_update' category.pk %}" class="me-2">✏️</a>
+        <form action="{% url 'category_delete' category.pk %}" method="post" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" style="border:none; background:none; padding:0;">🗑</button>
+        </form>
+      </span>
+    </li>
   {% empty %}
     <li class="list-group-item text-muted">Категорий пока нет</li>
   {% endfor %}
 </ul>
+
 <a href="{% url 'category_create' %}" class="btn btn-success">Добавить категорию</a>
 <a href="{% url 'task_list' %}" class="btn btn-secondary ms-2">Назад к задачам</a>
 {% endblock %}

@@ -14,14 +14,20 @@ app.autodiscover_tasks()
 
 # Настройка периодического запуска задач (celery beat)
 app.conf.beat_schedule = {
-# Проверка для создания повторяющихся задач
+    # Проверка для создания повторяющихся задач
     'create-repeated-tasks-every-day': {
         'task': 'todo_app.tasks.create_repeated_tasks',
         'schedule': crontab(minute=00, hour=00),  # каждый день в 00:00
     },
-# Проверка на отправку напоминаний по email
+    # Проверка на отправку напоминаний по email
+    # Приближающийся дедлайн
     'send-task-reminders-every-10min': {
         'task': 'todo_app.tasks.send_task_reminders',
         'schedule': crontab(minute='*/10'),  # каждые 10 минут
+    },
+    # Просроченные задачи
+    'send-overdue-task-notifications-daily': {
+        'task': 'todo_app.tasks.send_overdue_task_notifications',
+        'schedule': crontab(minute=00, hour=8),  # каждый день в 08:00
     },
 }

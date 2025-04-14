@@ -44,11 +44,7 @@ class Task(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
-    repeat = models.CharField(
-        max_length=10,
-        choices=REPEAT_CHOICES,
-        default='none'
-    )
+    repeat = models.CharField(max_length=10, choices=REPEAT_CHOICES, default='none')
 
     def __str__(self):
         return self.title

@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .serializers import TaskSerializer
+from .serializers import TaskSerializer, CategorySerializer
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -58,6 +58,8 @@ def task_create(request):
         if form.is_valid():
             task = form.save(commit=False)
             task.user = request.user
+            if task.is_completed:
+                task.closed_at = timezone.now()
             task.save()
             return redirect('task_list')
     else:
@@ -87,6 +89,7 @@ def task_update(request, pk):
             updated_task.save()
             return redirect('task_list')
     else:
+        # Если GET-запрос — отображаем форму с текущими данными задачи
         form = TaskForm(instance=task)
 
     return render(request, 'tasks/task_form.html', {'form': form})
@@ -162,6 +165,33 @@ def category_create(request):
     return render(request, 'tasks/category_form.html', {'form': form})
 
 
+# Обновление существующей категории (только для админов)
+@user_passes_test(is_admin)
+def category_update(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        # Если GET-запрос — отображаем форму с текущими данными категории
+        form = CategoryForm(instance=category)
+
+    return render(request, 'tasks/category_form.html', {'form': form})
+
+
+# Удаление категории (только для админов)
+@user_passes_test(is_admin)
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+
+    if request.method == 'POST':
+        category.delete()
+        return redirect('category_list')
+
+
 # Регистрация нового пользователя
 def register(request):
     if request.method == 'POST':
@@ -191,3 +221,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     # Присваиваем пользователя при создании задачи
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+# API endpoint для категорий
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]

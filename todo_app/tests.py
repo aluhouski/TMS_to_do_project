@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, Client
 from rest_framework.test import APIClient
 from .models import Task, Category
 from django.utils import timezone
 from datetime import timedelta
+from django.urls import reverse
 
 
 
@@ -29,12 +30,34 @@ class TaskModelTest(TestCase):
         self.assertEqual(task.category.name, 'Работа')  # Категория совпадает
 
 
-# Тесты для модели Category
-class CategoryModelTest(TestCase):
-    # Проверка метода __str__, должен возвращать название категории
-    def test_category_str(self):
-        category = Category.objects.create(name='Тест', color='#FFFF00')
-        self.assertEqual(str(category), 'Тест')
+# Тест для модели Category
+class CategoryPermissionsTest(TestCase):
+    # Создаём админа и обычного пользователя
+    def setUp(self):
+        self.admin_user = User.objects.create_user(username='AdminUser', password='Apass123', is_staff=True)
+        self.regular_user = User.objects.create_user(username='RegularUser', password='Upass456')
+
+        self.client = Client()
+
+    # Админ создает категорию
+    def test_admin_can_create_category(self):
+        self.client.login(username='AdminUser', password='Apass123')
+        response = self.client.post(reverse('category_create'), {
+            'name': 'Можно',
+            'color': '#123456'
+        })
+        self.assertEqual(response.status_code, 302)  # редирект после успешного создания
+        self.assertTrue(Category.objects.filter(name='Можно').exists())
+
+    # Простой юзер создает категорию
+    def test_regular_user_cannot_create_category(self):
+        self.client.login(username='RegularUser', password='Upass456')
+        response = self.client.post(reverse('category_create'), {
+            'name': 'Нельзя',
+            'color': '#FF0000'
+        })
+        self.assertEqual(response.status_code, 403)  # доступ запрещён
+        self.assertFalse(Category.objects.filter(name='Нельзя').exists())
 
 
 
@@ -43,7 +66,7 @@ class TaskAPITestCase(TestCase):
     # Создаём пользователя, категорию и тестовую задачу
     def setUp(self):
         self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.user = User.objects.create_user(username='ApiUser', password='Apass890')
         self.category = Category.objects.create(name='Учёба', color='#FFD700')
         self.task = Task.objects.create(
             user=self.user,
@@ -55,7 +78,7 @@ class TaskAPITestCase(TestCase):
 
     # Авторизованный пользователь получает доступ к задаче
     def test_task_detail_authenticated(self):
-        self.client.force_authenticate(user=self.user)
+        self.client.login(username='ApiUser', password='Apass890')
         response = self.client.get(f'/api/tasks/{self.task.id}/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'DRF API Task')           # Проверка наличия заголовка в ответе

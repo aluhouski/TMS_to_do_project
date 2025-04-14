@@ -46,25 +46,20 @@ def create_repeated_tasks():
 
 
 # Отправка email-напоминаний
-def send_reminder_email(user_email, task_title, task_due):
+def send_email_notification(subject, message, to_email):
     """
-    Отправляет письмо-напоминание о задаче на email пользователя.
+    Функция отправки email-уведомлений.
     """
-    subject = f'Напоминание: время выполнения задачи "{task_title}" скоро истекает'
-    message = (
-        f'Привет!\n'
-        f'Не забудь: задача "{task_title}" должна быть выполнена до дедлайна: {task_due}.'
-    )
     from_email = 'tmstodoapp@gmail.com'
 
-    send_mail(subject, message, from_email, [user_email])
+    send_mail(subject, message, from_email, [to_email])
 
 
 @shared_task
 def send_task_reminders():
     """
     Ищет задачи, срок выполнения которых наступит в течение часа,
-    и отправляет уведомление пользователю по email.
+    и отправляет напоминание.
     """
     now = timezone.now()
     one_hour_later = now + timedelta(hours=1)
@@ -79,4 +74,33 @@ def send_task_reminders():
     for task in tasks:
         user = task.user
         if user.email:
-            send_reminder_email(user.email, task.title, task.due_date)
+            subject = f'Напоминание: "{task.title}" скоро истекает'
+            message = (
+                f'Привет!\n'
+                f'Задача "{task.title}" должна быть выполнена до: {task.due_date}.'
+            )
+            send_email_notification(subject, message, user.email)
+
+
+@shared_task
+def send_overdue_task_notifications():
+    """
+    Ищет просроченные задачи и отправляет напоминание.
+    """
+    now = timezone.now()
+
+    overdue_tasks = Task.objects.filter(
+        is_completed=False,
+        due_date__lt=now
+    )
+
+    for task in overdue_tasks:
+        user = task.user
+        if user.email:
+            subject = f'Просрочена задача: "{task.title}"'
+            message = (
+                f'Привет!\n'
+                f'Ты пропустил дедлайн для задачи "{task.title}".\n'
+                f'Срок выполнения был: {task.due_date}.\n\n'
+            )
+            send_email_notification(subject, message, user.email)
